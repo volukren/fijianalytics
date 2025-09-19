@@ -15,6 +15,7 @@ import {
 import { authClient } from "@/lib/auth/client";
 
 export default function AppSidebar() {
+  const router = useRouter();
   const { data: organizations, isPending: isListPending } =
     authClient.useListOrganizations();
   const { data: activeOrganization, isPending: isActivePending } =
@@ -33,6 +34,8 @@ export default function AppSidebar() {
         toast.error(error.message ?? "Unable to switch organization");
         return;
       }
+
+      router.push('/dashboard');
 
       const nextOrg = orgs.find((org) => org.id === organizationId);
       toast.success(
