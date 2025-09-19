@@ -1,6 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
+import { createWebsiteAction } from "@/lib/actions/website/create-website";
+import { authClient } from "@/lib/auth/client";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -11,31 +16,27 @@ import {
 } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { useAction } from "next-safe-action/hooks";
-import { createWebsiteAction } from "@/lib/actions/website/create-website";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
-interface CreateWebsiteFormProps {
-  organizationId: string;
-}
-
-export default function CreateWebsiteForm({
-  organizationId,
-}: CreateWebsiteFormProps) {
+export default function CreateWebsiteForm() {
   const [domain, setDomain] = useState("");
+
+  const { data: activeOrganization } = authClient.useActiveOrganization();
 
   const router = useRouter();
 
   const { executeAsync, isPending } = useAction(createWebsiteAction, {
     onSuccess: () => {
       toast.success("Website added successfully");
-      router.push(`/organizations/${organizationId}`);
+      router.push(`/dashboard`);
     },
     onError: () => {
       toast.error("Failed to add website");
     },
   });
+
+  if (!activeOrganization) {
+    return <div>No active organization</div>;
+  }
 
   return (
     <form
@@ -43,7 +44,7 @@ export default function CreateWebsiteForm({
         e.preventDefault();
         executeAsync({
           domain: domain,
-          organizationId: organizationId,
+          organizationId: activeOrganization.id,
         });
       }}
       className="grid gap-4 max-w-2xl mx-auto"

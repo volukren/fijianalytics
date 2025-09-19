@@ -41,12 +41,12 @@ export const auth = betterAuth({
           });
 
           console.log(
-            `Deleted ${result.count} empty organizations after user ${user.id} account deletion`
+            `Deleted ${result.count} empty organizations after user ${user.id} account deletion`,
           );
         } catch (error) {
           console.error(
             "Failed to clean up members after user deletion: ",
-            error
+            error,
           );
           // todo: alert admins
         }
@@ -67,4 +67,27 @@ export const auth = betterAuth({
       },
     }),
   ],
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          try {
+            const result = await prisma.member.findFirst({
+              where: { userId: session.userId },
+              select: { organizationId: true },
+            });
+            if (result) {
+              session.activeOrganizationId = result.organizationId;
+            }
+          } catch (error) {
+            console.error(
+              "Failed to set default organization for session: ",
+              error,
+            );
+          }
+          return { data: session };
+        },
+      },
+    },
+  },
 });
