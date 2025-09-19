@@ -1,30 +1,42 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import DeleteAccountForm from "@/components/settings/delete-account-form";
-import EditNameForm from "@/components/settings/edit-name-form";
+import EditOrganizationNameForm from "@/components/settings/edit-organization-name-form";
 import { auth } from "@/lib/auth/server";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: `Settings - Fiji Analytics`,
+  title: `Organization Settings - Fiji Analytics`,
 };
 
 export default async function SettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
 
-  if (!session) {
-    return null;
+  if (!session?.session.activeOrganizationId) {
+    return <div>No active organization found</div>;
+  }
+
+  const organization = await prisma.organization.findUnique({
+    where: { id: session.session.activeOrganizationId },
+  });
+
+  if (!organization) {
+    return <div>Organization not found</div>;
   }
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="space-y-2 mb-8">
-        <h1 className="font-bold text-2xl">User account</h1>
-        <p className="tracking-wide text-neutral-500">Manage your profile</p>
+        <h1 className="font-bold text-2xl">Organization Settings</h1>
+        <p className="tracking-wide text-neutral-500">
+          Manage your organization settings
+        </p>
       </div>
 
       <div className="space-y-6">
-        <EditNameForm currentName={session.user.name || ""} />
-        <DeleteAccountForm />
+        <EditOrganizationNameForm
+          currentName={organization.name}
+          organizationId={organization.id}
+        />
       </div>
     </div>
   );

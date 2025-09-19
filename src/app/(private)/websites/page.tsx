@@ -20,7 +20,7 @@ export default async function WebsitesPage() {
     <>
       <div className="flex items-center justify-between">
         <h1 className="font-semibold text-xl tracking-tight">Your Websites</h1>
-        <Button asChild size="sm">
+        <Button asChild size="lg">
           <Link href={`/dashboard/new-website`}>
             <PlusIcon size={15} />
             New Website
