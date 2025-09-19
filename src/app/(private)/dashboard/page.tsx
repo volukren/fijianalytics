@@ -21,9 +21,7 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="font-semibold text-xl tracking-tight">Your Websites</h1>
         <Button asChild size="sm">
-          <Link
-            href={`/organizations/${session.session.activeOrganizationId}/new-website`}
-          >
+          <Link href={`/dashboard/new-website`}>
             <PlusIcon size={15} />
             New Website
           </Link>
