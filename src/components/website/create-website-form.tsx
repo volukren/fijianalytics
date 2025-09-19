@@ -29,8 +29,8 @@ export default function CreateWebsiteForm() {
       toast.success("Website added successfully");
       router.push(`/dashboard`);
     },
-    onError: () => {
-      toast.error("Failed to add website");
+    onError: (error) => {
+      toast.error(error.error.serverError || "Failed to add website");
     },
   });
 
