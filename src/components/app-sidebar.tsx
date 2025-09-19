@@ -1,8 +1,8 @@
 "use client";
 
-import { Loader2Icon } from "lucide-react";
+import { BarChart3Icon, GlobeIcon, Loader2Icon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import NavUser from "@/components/nav-user";
 import OrganizationSwitcher from "@/components/organization/organization-switcher";
@@ -10,12 +10,17 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth/client";
 
 export default function AppSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: organizations, isPending: isListPending } =
     authClient.useListOrganizations();
   const { data: activeOrganization, isPending: isActivePending } =
@@ -35,7 +40,7 @@ export default function AppSidebar() {
         return;
       }
 
-      router.push('/dashboard');
+      router.push("/dashboard");
 
       const nextOrg = orgs.find((org) => org.id === organizationId);
       toast.success(
@@ -73,7 +78,28 @@ export default function AppSidebar() {
           />
         )}
       </SidebarHeader>
-      <SidebarContent></SidebarContent>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname === "/dashboard"}>
+                <Link href="/dashboard">
+                  <BarChart3Icon />
+                  <span>Dashboard</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname === "/websites"}>
+                <Link href="/websites">
+                  <GlobeIcon />
+                  <span>Websites</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
       <SidebarFooter>
         <NavUser />
       </SidebarFooter>
