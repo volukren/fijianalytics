@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
 
 interface OrganizationPageProps {
   params: Promise<{ id: string }>;

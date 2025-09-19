@@ -34,7 +34,7 @@ export default function LoginForm() {
           setIsPending(true);
           const { error } = await authClient.signIn.magicLink({
             email: email,
-            callbackURL: "/organizations",
+            callbackURL: "/dashboard",
             newUserCallbackURL: "/onboarding",
           });
           setIsPending(false);
@@ -63,7 +63,7 @@ export default function LoginForm() {
           onClick={async () => {
             await authClient.signIn.social({
               provider: "google",
-              callbackURL: "/organizations",
+              callbackURL: "/dashboard",
               newUserCallbackURL: "/onboarding",
             });
           }}
@@ -79,7 +79,7 @@ export default function LoginForm() {
           onClick={async () => {
             await authClient.signIn.social({
               provider: "github",
-              callbackURL: "/organizations",
+              callbackURL: "/dashboard",
               newUserCallbackURL: "/onboarding",
             });
           }}

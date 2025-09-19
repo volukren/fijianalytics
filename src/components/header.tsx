@@ -42,7 +42,7 @@ export default function Header() {
         )}
         {session && (
           <Button asChild size="sm">
-            <Link href="/organizations">Dashboard</Link>
+            <Link href="/dashboard">Dashboard</Link>
           </Button>
         )}
         {!session && (
