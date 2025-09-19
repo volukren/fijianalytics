@@ -1,113 +1,82 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-
+import type { Organization } from "better-auth/plugins/organization";
+import { ChevronDownIcon } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { authClient } from "@/lib/auth/client";
-import { cn } from "@/lib/utils";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
 
 interface OrganizationSwitcherProps {
-  className?: string;
+  organizations: Organization[];
+  activeOrganization: Organization | null;
+  onSwitch: (organizationId: string) => void;
 }
 
 export default function OrganizationSwitcher({
-  className,
+  organizations,
+  activeOrganization,
+  onSwitch,
 }: OrganizationSwitcherProps) {
-  const {
-    data: organizations,
-    isPending: isListPending,
-  } = authClient.useListOrganizations();
-  const {
-    data: activeOrganization,
-    isPending: isActivePending,
-  } = authClient.useActiveOrganization();
-  const [isSwitching, setIsSwitching] = useState(false);
+  const { state } = useSidebar();
 
-  const isLoading = isListPending || isActivePending;
-  const organizationOptions = useMemo(
-    () => organizations ?? [],
-    [organizations]
-  );
-
-  const handleOrganizationChange = useCallback(
-    async (organizationId: string) => {
-      if (organizationId === activeOrganization?.id) {
-        return;
-      }
-
-      setIsSwitching(true);
-      try {
-        const { error } = await authClient.organization.setActive({
-          organizationId,
-        });
-
-        if (error) {
-          toast.error(error.message ?? "Unable to switch organization");
-          return;
-        }
-
-        const nextOrganization = organizationOptions.find(
-          (organization) => organization.id === organizationId
-        );
-
-        toast.success(
-          nextOrganization
-            ? `Switched to ${nextOrganization.name}`
-            : "Active organization updated"
-        );
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Unable to switch organization"
-        );
-      } finally {
-        setIsSwitching(false);
-      }
-    },
-    [activeOrganization?.id, organizationOptions]
-  );
-
-  const isDisabled =
-    isLoading || isSwitching || organizationOptions.length === 0;
-  const placeholder = organizationOptions.length
-    ? "Select an organization"
-    : "No organizations found";
+  const isCollapsed = state === "collapsed";
 
   return (
-    <Select
-      value={activeOrganization?.id ?? undefined}
-      onValueChange={handleOrganizationChange}
-      disabled={isDisabled}
-    >
-      <SelectTrigger
-        size="sm"
-        className={cn(
-          "w-56 justify-between",
-          (isLoading || isSwitching) && "cursor-progress",
-          className
-        )}
-      >
-        <SelectValue placeholder={placeholder} />
-        {(isLoading || isSwitching) && (
-          <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-        )}
-      </SelectTrigger>
-      <SelectContent>
-        {organizationOptions.map((organization) => (
-          <SelectItem key={organization.id} value={organization.id}>
-            {organization.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <DropdownMenu>
+      <SidebarMenu className="w-full">
+        <SidebarMenuItem>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton size="lg" className="border border-neutral-200">
+              <Avatar className="size-8 rounded">
+                <AvatarFallback className="rounded bg-neutral-200">
+                  {activeOrganization?.name?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {!isCollapsed && (
+                <>
+                  <div className="flex-1 truncate text-sm">
+                    {activeOrganization?.name || "Switch Organization"}
+                  </div>
+                  <ChevronDownIcon className="size-4 text-muted-foreground" />
+                </>
+              )}
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <DropdownMenuContent className="w-56">
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          Organizations
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuRadioGroup
+          value={activeOrganization?.id ?? ""}
+          onValueChange={(orgId) => onSwitch(orgId)}
+        >
+          {organizations.map((org) => (
+            <DropdownMenuRadioItem
+              key={org.id}
+              value={org.id}
+              className="truncate"
+            >
+              {org.name}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
