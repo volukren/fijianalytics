@@ -4,7 +4,6 @@ import { debounce } from "./utils.js";
 ((window) => {
   const {
     document: { currentScript, referrer },
-    location: { href },
     navigator: { userAgent },
   } = window;
 

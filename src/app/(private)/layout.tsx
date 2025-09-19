@@ -1,4 +1,9 @@
-import PrivateHeader from "@/components/private-header";
+import AppSidebar from "@/components/app-sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export default function PrivateLayout({
   children,
@@ -6,11 +11,14 @@ export default function PrivateLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <div className="px-5 py-3 border-b border-gray-200">
-        <PrivateHeader organizations={[]} />
-      </div>
-      <div className="max-w-7xl mx-auto px-5 py-10">{children}</div>
-    </>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset className="p-3">
+        <div className="sticky top-0 left-0 w-full flex items-center">
+          <SidebarTrigger />
+        </div>
+        <div className="flex-1 px-5 py-10">{children}</div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

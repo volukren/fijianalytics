@@ -120,3 +120,24 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .animate-onboarding-press {
+    animation: onboarding-press 240ms ease-in-out;
+  }
+
+  @keyframes onboarding-press {
+    0% {
+      transform: scale(1);
+    }
+    45% {
+      transform: scale(0.95);
+    }
+    80% {
+      transform: scale(1.02);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}

@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth/client";
 import LogoSVG from "./logo";
@@ -17,28 +16,25 @@ export default function Header() {
           Fiji Analytics
         </span>
       </Link>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <div className="mr-2 flex items-center gap-5">
           <Link href="/#pricing" className="text-gray-600 hover:text-gray-500">
             Pricing
           </Link>
           {!session && (
-            <Link href="/signin" className="text-gray-600 hover:text-gray-500">
-              Sign in
-            </Link>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/login">Log in</Link>
+            </Button>
           )}
           {session && (
             <Button asChild size="sm">
-              <Link href="/organizations">
-                To dashboard
-                <ArrowRightIcon size={15} />
-              </Link>
+              <Link href="/organizations">Dashboard</Link>
             </Button>
           )}
         </div>
         {!session && (
           <Button asChild size="sm">
-            <Link href="/signup">Try it for Free</Link>
+            <Link href="/login">Start now</Link>
           </Button>
         )}
       </div>
