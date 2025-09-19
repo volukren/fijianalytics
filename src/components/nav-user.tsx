@@ -79,7 +79,7 @@ export default function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/settings">
+                <Link href="/account">
                   <UserCircleIcon size="15" /> Account Settings
                 </Link>
               </DropdownMenuItem>

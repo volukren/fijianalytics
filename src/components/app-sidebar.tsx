@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3Icon, GlobeIcon, Loader2Icon } from "lucide-react";
+import { BarChart3Icon, GlobeIcon, Loader2Icon, SettingsIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -94,6 +94,14 @@ export default function AppSidebar() {
                 <Link href="/websites">
                   <GlobeIcon />
                   <span>Websites</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname === "/settings"}>
+                <Link href="/settings">
+                  <SettingsIcon />
+                  <span>Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

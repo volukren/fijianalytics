@@ -22,8 +22,9 @@ export default function Breadcrumbs() {
   const breadcrumbItems = pathSegments.map((segment, index) => {
     const href = "/" + pathSegments.slice(0, index + 1).join("/");
     const isLast = index === pathSegments.length - 1;
+    const capitalizedSegment = segment.charAt(0).toUpperCase() + segment.slice(1);
 
-    return { href, segment, isLast };
+    return { href, segment: capitalizedSegment, isLast };
   });
 
   return (
