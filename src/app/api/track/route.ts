@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
     // Insert event to ClickHouse with all tracking data
     const event = {
       session_id: body.sessionId || randomUUID(),
+      domain: body.domain || "",
       timestamp: new Date(),
       referrer: body.referrer || "",
       href: body.href || "",

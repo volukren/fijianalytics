@@ -17,7 +17,15 @@ import { send } from "./networking.js";
   const url = new URL(scriptSrc);
   const apiHost = `${url.protocol}//${url.host}`;
 
+  const domain = (currentScript as HTMLScriptElement).getAttribute("data-domain");
+
+  if (!domain) {
+    console.error("Missing data-domain attribute on script tag");
+    return;
+  }
+
   console.info("api host: ", apiHost);
+  console.info("tracking domain: ", domain);
 
   const debouncedSend = debounce(
     (data: TrackingData) => send(data, apiHost),
@@ -26,8 +34,9 @@ import { send } from "./networking.js";
 
   const track = () => {
     const trackingData: TrackingData = {
+      domain,
       referrer,
-      href: window.location.href,
+      href: window.location.pathname,
       userAgent,
       screen: `${window.screen.width}x${window.screen.height}`,
       language: window.navigator.language || window.navigator.languages?.[0] || "",

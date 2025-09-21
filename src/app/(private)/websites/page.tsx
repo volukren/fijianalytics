@@ -14,6 +14,7 @@ export default async function WebsitesPage() {
 
   const websites = await prisma.website.findMany({
     where: { organizationId: session.session.activeOrganizationId },
+    orderBy: { createdAt: "desc" },
   });
 
   return (

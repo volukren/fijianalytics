@@ -10,6 +10,7 @@ export const clickhouseClient = createClient({
 
 export interface EventRecord {
   session_id: string;
+  domain: string;
   timestamp: Date | string;
   referrer: string;
   href: string;
@@ -33,6 +34,7 @@ export async function insertEvent(event: EventRecord) {
 
     const eventToInsert = {
       session_id: event.session_id,
+      domain: event.domain,
       timestamp: formattedTimestamp,
       referrer: event.referrer,
       href: event.href,
@@ -68,6 +70,109 @@ export async function getEvents(limit = 100) {
   } catch (error) {
     console.error("Failed to fetch events from ClickHouse:", error);
     return [];
+  }
+}
+
+export async function getEventsByDomain(domain: string, limit = 100) {
+  try {
+    const query = `SELECT * FROM events WHERE domain = {domain:String} ORDER BY timestamp DESC LIMIT {limit:UInt32}`;
+
+    const result = await clickhouseClient.query({
+      query,
+      query_params: { domain, limit },
+      format: "JSONEachRow",
+    });
+
+    const data = await result.json<EventRecord[]>();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch events by domain from ClickHouse:", error);
+    return [];
+  }
+}
+
+export async function getAnalyticsByDomain(domain: string) {
+  try {
+    // Get page views count
+    const pageViewsQuery = `
+      SELECT COUNT(*) as page_views
+      FROM events
+      WHERE domain = {domain:String}
+    `;
+
+    // Get unique sessions count
+    const uniqueSessionsQuery = `
+      SELECT COUNT(DISTINCT session_id) as unique_sessions
+      FROM events
+      WHERE domain = {domain:String}
+    `;
+
+    // Get top pages
+    const topPagesQuery = `
+      SELECT
+        href,
+        COUNT(*) as views
+      FROM events
+      WHERE domain = {domain:String}
+      GROUP BY href
+      ORDER BY views DESC
+      LIMIT 10
+    `;
+
+    // Get referrers
+    const referrersQuery = `
+      SELECT
+        referrer,
+        COUNT(*) as count
+      FROM events
+      WHERE domain = {domain:String} AND referrer != ''
+      GROUP BY referrer
+      ORDER BY count DESC
+      LIMIT 10
+    `;
+
+    const [pageViewsResult, uniqueSessionsResult, topPagesResult, referrersResult] = await Promise.all([
+      clickhouseClient.query({
+        query: pageViewsQuery,
+        query_params: { domain },
+        format: "JSONEachRow",
+      }),
+      clickhouseClient.query({
+        query: uniqueSessionsQuery,
+        query_params: { domain },
+        format: "JSONEachRow",
+      }),
+      clickhouseClient.query({
+        query: topPagesQuery,
+        query_params: { domain },
+        format: "JSONEachRow",
+      }),
+      clickhouseClient.query({
+        query: referrersQuery,
+        query_params: { domain },
+        format: "JSONEachRow",
+      }),
+    ]);
+
+    const pageViews = await pageViewsResult.json<{ page_views: number }[]>();
+    const uniqueSessions = await uniqueSessionsResult.json<{ unique_sessions: number }[]>();
+    const topPages = await topPagesResult.json<{ href: string; views: number }[]>();
+    const referrers = await referrersResult.json<{ referrer: string; count: number }[]>();
+
+    return {
+      pageViews: pageViews[0]?.page_views || 0,
+      uniqueSessions: uniqueSessions[0]?.unique_sessions || 0,
+      topPages,
+      referrers,
+    };
+  } catch (error) {
+    console.error("Failed to fetch analytics by domain from ClickHouse:", error);
+    return {
+      pageViews: 0,
+      uniqueSessions: 0,
+      topPages: [],
+      referrers: [],
+    };
   }
 }
 

@@ -25,6 +25,7 @@ async function migrate() {
         CREATE TABLE IF NOT EXISTS events
         (
           session_id String,
+          domain String,
           timestamp DateTime,
           referrer String,
           href String,
@@ -33,7 +34,7 @@ async function migrate() {
           language String
         )
         ENGINE = MergeTree()
-        ORDER BY timestamp
+        ORDER BY (domain, timestamp)
       `,
     });
     console.log("Migration completed successfully!");
