@@ -1,0 +1,13 @@
+{
+  "name": "clickhouse-migrations",
+  "version": "1.0.0",
+  "description": "ClickHouse database migrations",
+  "type": "module",
+  "scripts": {
+    "migrate": "node migrate.js"
+  },
+  "dependencies": {
+    "@clickhouse/client": "^1.12.1",
+    "dotenv": "^16.4.7"
+  }
+}

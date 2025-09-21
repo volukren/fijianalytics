@@ -1,6 +1,17 @@
 import { Button } from "@/components/ui/button";
+import { getEvents, testConnection } from "@/lib/clickhouse";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const isConnected = await testConnection();
+  const events = await getEvents();
+
+  if (isConnected) {
+    console.log("ClickHouse connection successful");
+    console.log("Events from ClickHouse:", events);
+  } else {
+    console.log("Failed to connect to ClickHouse");
+  }
+
   return (
     <div className="flex flex-col items-center text-center space-y-8 py-20">
       <div className="space-y-4">

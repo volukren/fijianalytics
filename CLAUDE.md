@@ -6,101 +6,133 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development
 - `npm run dev` - Start the Next.js development server
-- `npm run build` - Build the tracker script and Next.js application
+- `npm run build` - Build the tracker script and Next.js application (runs `node build.js && next build`)
 - `npm start` - Start the production server
 - `npm run lint` - Run Biome linter checks
 - `npm run format` - Format code with Biome
 
 ### Database
-- `npx prisma generate` - Generate Prisma client
-- `npx prisma db push` - Push schema changes to database
+- `npx prisma generate` - Generate Prisma client (outputs to `src/generated/client`)
+- `npx prisma db push` - Push schema changes to PostgreSQL database
 - `npx prisma migrate dev` - Create and apply migrations
 - `npx prisma studio` - Open Prisma Studio
 
+### Docker Development
+- `docker-compose up -d` - Start PostgreSQL (port 5433) and ClickHouse (port 8123) databases
+- `docker-compose down` - Stop all services
+- `docker-compose logs clickhouse` - View ClickHouse logs
+- `docker-compose exec clickhouse clickhouse-client` - Access ClickHouse CLI
+
 ## Architecture
 
-This is a Next.js 15 application with the following key architectural patterns:
+This is a privacy-focused web analytics platform built with Next.js 15, using a dual-database architecture for optimal performance.
+
+### Dual Database Architecture
+- **PostgreSQL** - Primary application data (users, organizations, websites)
+  - Accessed via Prisma ORM with custom output path (`src/generated/client`)
+  - Runs on port 5433 in Docker development
+- **ClickHouse** - High-performance analytics data storage
+  - Events table for tracking page views and user sessions
+  - Accessed via `@clickhouse/client` library
+  - Custom migration system in `/clickhouse/` directory
 
 ### App Router Structure
 Uses Next.js App Router with route groups for organization:
 
 #### Route Groups
 - `(auth)/` - Authentication pages
-  - `/login` - User login page
-  - Shared layout for auth pages
+  - `/login` - User login with OAuth and magic links
 
 - `(public)/` - Public pages
-  - `/` - Landing page (home)
-  - Public layout wrapper
+  - `/` - Landing page with ClickHouse connection test
+  - `/goodbye` - Account deletion confirmation
 
 - `(private)/` - Protected pages (requires authentication)
-  - `/organizations` - Organizations list
-  - `/organizations/new` - Create new organization
-  - `/organizations/[id]` - Organization detail page
-  - `/organizations/[id]/new-website` - Add website to organization
+  - `/account` - User account management
+  - `/dashboard` - Main dashboard
+  - `/dashboard/new-website` - Add new website
+  - `/settings` - Application settings
+  - `/websites` - List all websites
   - `/websites/[domain]` - Website analytics dashboard
-  - Protected layout with sidebar navigation
 
 - `(onboarding)/` - User onboarding flow
-  - `/onboarding` - Onboarding start page
-  - `/onboarding/create-organization` - Create first organization
-  - Onboarding-specific layout
+  - `/onboarding` - Create first organization
 
 #### API Routes
 - `/api/auth/[...all]` - Better-auth authentication endpoints
-- `/api/track` - Analytics tracking endpoint for script.js
+- `/api/track` - Analytics event ingestion endpoint (writes to ClickHouse)
 
-#### Layout Hierarchy
-- Root layout (`src/app/layout.tsx`) - Global providers and configuration
-  - Route group layouts - Specific UI wrappers per section
-    - Page components - Individual route content
-
-#### Middleware Protection
-- Authentication middleware protects `(private)` routes
-- Redirects unauthenticated users to `/login`
-- Handles organization context and permissions
-
-### Authentication
+### Authentication & Authorization
 - Uses `better-auth` library with Prisma adapter
-- Google OAuth provider configured
-- Middleware protection on `/account` and `/app` routes
+- **Multi-provider support**: Google OAuth, GitHub OAuth, Magic Links (via Resend)
+- **Organization-based multi-tenancy** with member roles
+- **Session enhancement** with `activeOrganizationId` tracking
+- Middleware protection on private routes with organization membership validation
 - Server-side auth configuration in `src/lib/auth/server.ts`
+- Account deletion with email verification and organization cleanup
 
-### Database
-- PostgreSQL database with Prisma ORM
-- Schema includes User, Session, Account, and Verification models
-- Uses `snake_case` for database column names with `@map` directives
-- Prisma client singleton pattern in `src/lib/prisma.ts`
+### Multi-tenancy Model
+- **Organizations** - Top-level tenant containers
+- **Members** - Users linked to organizations with roles
+- **Websites** - Analytics properties owned by organizations
+- **Invitations** - Pending member invitations with email verification
+- Default organization assignment on user creation
+
+### Analytics Tracking System
+#### Browser Tracking Script (`src/tracker/`)
+- Built as standalone IIFE bundle to `public/script.js`
+- SPA-aware tracking (intercepts `pushState`/`replaceState`)
+- Debounced API calls (300ms) to prevent request spam
+- Collects: referrer, URL, user agent, session data
+
+#### ClickHouse Integration (`src/lib/clickhouse.ts`)
+- Event storage with `session_id` and `timestamp`
+- Connection pooling and error handling
+- Async insert for performance
+- Time zone aware queries
 
 ### UI Components
 - Uses shadcn/ui components with Radix UI primitives
 - Tailwind CSS v4 for styling
-- Component aliases configured: `@/components`, `@/lib`, `@/components/ui`
+- Component aliases: `@/components`, `@/lib`, `@/components/ui`
 - New York style variant with neutral base color
-- When importing icons from `lucide-react`, always use the variant with `Icon` suffix (e.g., use `UserIcon` instead of `User`, `ChevronDownIcon` instead of `ChevronDown`)
+- Sonner for toast notifications
+- When importing icons from `lucide-react`, always use the variant with `Icon` suffix (e.g., `UserIcon`, `ChevronDownIcon`)
 
-### Custom Build Process
-The project includes a custom build step (`build.js`) that:
-- Builds a browser tracking script from `src/tracker/` using esbuild
-- Outputs minified IIFE bundle to `public/script.js`
-- Must run before Next.js build
-
-### Tracking System
-- Custom analytics tracking script in `src/tracker/`
-- Collects referrer, URL, and user agent data
-- Debounced API calls to `/api/track` endpoint
-- Built as standalone browser script
+### Build Process
+The project uses a two-step build process (`build.js`):
+1. **Tracker Script Build** - esbuild compiles `src/tracker/` to minified IIFE bundle
+2. **Next.js Build** - Standard Next.js application build
 
 ### Code Quality
-- Biome for linting and formatting (configured for Next.js and React)
-- TypeScript with strict mode enabled
+- **Biome** for linting and formatting (NOT ESLint/Prettier)
+- TypeScript with strict mode
 - Path aliases using `@/*` for `./src/*`
+- Git VCS integration for ignore files
 
 ## Environment Variables Required
+
+### Application
 - `DATABASE_URL` - PostgreSQL connection string
+- `BETTER_AUTH_SECRET` - Secret key for better-auth encryption
+
+### OAuth Providers
 - `GOOGLE_CLIENT_ID` - Google OAuth client ID
 - `GOOGLE_CLIENT_SECRET` - Google OAuth client secret
 - `GITHUB_CLIENT_ID` - GitHub OAuth client ID
 - `GITHUB_CLIENT_SECRET` - GitHub OAuth client secret
-- `BETTER_AUTH_SECRET` - Secret key for better-auth encryption
-- `RESEND_API_KEY` - Resend email service API key
+
+### Email Service
+- `RESEND_API_KEY` - Resend API key for magic links and notifications
+
+### ClickHouse Analytics
+- `CLICKHOUSE_HOST` - ClickHouse server URL (default: http://localhost:8123)
+- `CLICKHOUSE_DB` - ClickHouse database name (default: fiji)
+- `CLICKHOUSE_USER` - ClickHouse username (default: user)
+- `CLICKHOUSE_PASSWORD` - ClickHouse password
+
+### Docker Development (optional)
+- `POSTGRES_PORT` - PostgreSQL port (default: 5433)
+- `POSTGRES_DB` - PostgreSQL database name
+- `POSTGRES_USER` - PostgreSQL username
+- `POSTGRES_PASSWORD` - PostgreSQL password
