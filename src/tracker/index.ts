@@ -1,5 +1,6 @@
 import type { TrackingData } from "./types.js";
 import { debounce } from "./utils.js";
+import { send } from "./networking.js";
 
 ((window) => {
   const {
@@ -12,23 +13,24 @@ import { debounce } from "./utils.js";
     return;
   }
 
-  const send = async (data: TrackingData) => {
-    await fetch("http://localhost:3000/api/track", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  };
+  const scriptSrc = (currentScript as HTMLScriptElement).src;
+  const url = new URL(scriptSrc);
+  const apiHost = `${url.protocol}//${url.host}`;
 
-  const debouncedSend = debounce((data: TrackingData) => send(data), 300);
+  console.info("api host: ", apiHost);
+
+  const debouncedSend = debounce(
+    (data: TrackingData) => send(data, apiHost),
+    300,
+  );
 
   const track = () => {
     const trackingData: TrackingData = {
       referrer,
       href: window.location.href,
       userAgent,
+      screen: `${window.screen.width}x${window.screen.height}`,
+      language: window.navigator.language || window.navigator.languages?.[0] || "",
     };
     debouncedSend(trackingData);
   };

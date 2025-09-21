@@ -25,7 +25,12 @@ async function migrate() {
         CREATE TABLE IF NOT EXISTS events
         (
           session_id String,
-          timestamp DateTime
+          timestamp DateTime,
+          referrer String,
+          href String,
+          user_agent String,
+          screen String,
+          language String
         )
         ENGINE = MergeTree()
         ORDER BY timestamp

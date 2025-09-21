@@ -11,6 +11,11 @@ export const clickhouseClient = createClient({
 export interface EventRecord {
   session_id: string;
   timestamp: Date | string;
+  referrer: string;
+  href: string;
+  user_agent: string;
+  screen: string;
+  language: string;
 }
 
 export async function insertEvent(event: EventRecord) {
@@ -29,6 +34,11 @@ export async function insertEvent(event: EventRecord) {
     const eventToInsert = {
       session_id: event.session_id,
       timestamp: formattedTimestamp,
+      referrer: event.referrer,
+      href: event.href,
+      user_agent: event.user_agent,
+      screen: event.screen,
+      language: event.language,
     };
 
     await clickhouseClient.insert({

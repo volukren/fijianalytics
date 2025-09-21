@@ -1,7 +1,7 @@
+import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { insertEvent } from "@/lib/clickhouse";
-import { randomUUID } from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,16 +9,21 @@ export async function POST(request: NextRequest) {
 
     console.log("Body:", body);
 
-    // Insert test event to ClickHouse
-    const testEvent = {
+    // Insert event to ClickHouse with all tracking data
+    const event = {
       session_id: body.sessionId || randomUUID(),
       timestamp: new Date(),
+      referrer: body.referrer || "",
+      href: body.href || "",
+      user_agent: body.userAgent || "",
+      screen: body.screen || "",
+      language: body.language || "",
     };
 
-    const result = await insertEvent(testEvent);
+    const result = await insertEvent(event);
 
     if (result.success) {
-      console.log("Event inserted to ClickHouse:", testEvent);
+      console.log("Event inserted to ClickHouse:", event);
     } else {
       console.error("Failed to insert event to ClickHouse");
     }
