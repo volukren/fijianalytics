@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node build.js && next dev",
-    "build": "node build.js && next build",
+    "dev": "npm run build:tracker && next dev",
+    "build": "npm run build:tracker && next build",
+    "build:tracker": "esbuild src/tracker/index.ts --bundle --minify --platform=browser --format=iife --outfile=public/script.js --target=es2015",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write"
