@@ -110,6 +110,11 @@ The project uses a two-step build process (`build.js`):
 - Path aliases using `@/*` for `./src/*`
 - Git VCS integration for ignore files
 
+### Git Commit Guidelines
+- **Use single-line commit messages only** - No multi-line commit messages
+- Keep commit messages concise and descriptive
+- Follow conventional commit format (e.g., `feat:`, `fix:`, `docs:`, `refactor:`)
+
 ## Environment Variables Required
 
 ### Application

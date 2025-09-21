@@ -154,10 +154,10 @@ export async function getAnalyticsByDomain(domain: string) {
       }),
     ]);
 
-    const pageViews = await pageViewsResult.json<{ page_views: number }[]>();
-    const uniqueSessions = await uniqueSessionsResult.json<{ unique_sessions: number }[]>();
-    const topPages = await topPagesResult.json<{ href: string; views: number }[]>();
-    const referrers = await referrersResult.json<{ referrer: string; count: number }[]>();
+    const pageViews = await pageViewsResult.json() as Array<{ page_views: number }>;
+    const uniqueSessions = await uniqueSessionsResult.json() as Array<{ unique_sessions: number }>;
+    const topPages = await topPagesResult.json() as Array<{ href: string; views: number }>;
+    const referrers = await referrersResult.json() as Array<{ referrer: string; count: number }>;
 
     return {
       pageViews: pageViews[0]?.page_views || 0,
