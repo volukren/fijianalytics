@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { insertEvent } from "@/lib/clickhouse";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,33 +8,55 @@ export async function POST(request: NextRequest) {
 
     console.log("Body:", body);
 
-    // Insert event to ClickHouse with all tracking data
+    // Extract screen dimensions from the screen string (e.g., "1920x1080")
+    const screenParts = body.screen?.split("x") || ["0", "0"];
+    const screenWidth = parseInt(screenParts[0], 10) || 0;
+    const screenHeight = parseInt(screenParts[1], 10) || 0;
+
     const event = {
-      session_id: body.sessionId || randomUUID(),
-      domain: body.domain || "",
-      timestamp: new Date(),
+      event_id: randomUUID().toString(),
+      timestamp: Date.now(),
+      session_id: body.sessionId || randomUUID().toString(),
+      pathname: body.href,
+      event_type: "pageview",
       referrer: body.referrer || "",
-      href: body.href || "",
-      user_agent: body.userAgent || "",
-      screen: body.screen || "",
       language: body.language || "",
+      site_id: body.domain,
+      screen_width: screenWidth,
+      screen_height: screenHeight,
     };
 
-    const result = await insertEvent(event);
+    console.info("Event info:", event);
 
-    if (result.success) {
-      console.log("Event inserted to ClickHouse:", event);
-    } else {
-      console.error("Failed to insert event to ClickHouse");
+    const tinyBirdResponse = await fetch(
+      `https://api.eu-central-1.aws.tinybird.co/v0/events?name=events`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.TINYBIRD_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(event),
+      },
+    );
+
+    if (!tinyBirdResponse.ok) {
+      const errorText = await tinyBirdResponse.text();
+      console.error("Tinybird API error:", {
+        status: tinyBirdResponse.status,
+        statusText: tinyBirdResponse.statusText,
+        error: errorText,
+      });
     }
+
+    const tinyBirdData = await tinyBirdResponse.json();
+    console.info("Tinybird response:", tinyBirdData);
 
     return NextResponse.json({
       success: true,
       message: "Data tracked successfully",
-      timestamp: new Date().toISOString(),
-      clickhouse: result.success
-        ? "Event saved to ClickHouse"
-        : "Failed to save to ClickHouse",
+      timestamp: event.timestamp,
+      tinybird: tinyBirdData,
     });
   } catch (error) {
     console.error("Error processing track request:", error);
