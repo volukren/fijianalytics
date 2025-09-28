@@ -50,6 +50,6 @@ export const createWebsiteAction = authUserActionClient
     console.info("savedSite: ", savedSite);
 
     return {
-      id: savedSite.id,
+      domain: savedSite.domain,
     };
   });

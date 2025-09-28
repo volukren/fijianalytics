@@ -32,7 +32,7 @@ export default async function WebsitesPage() {
         {websites.map((w) => {
           return (
             <div
-              key={w.id}
+              key={w.domain}
               className="p-5 rounded-lg border border-gray-200 relative hover:shadow-xs"
             >
               <Link href={`/websites/${w.domain}`}>
