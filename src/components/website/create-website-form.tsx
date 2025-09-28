@@ -49,7 +49,7 @@ export default function CreateWebsiteForm() {
   };
 
   const handleGoToWebsites = () => {
-    router.push('/websites');
+    router.push("/websites");
   };
 
   if (!activeOrganization) {
@@ -57,7 +57,7 @@ export default function CreateWebsiteForm() {
   }
 
   if (showScriptInstructions) {
-    const scriptUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/script.js`;
+    const scriptUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/script.js`;
     const scriptTag = `<script defer data-domain="${addedDomain}" src="${scriptUrl}"></script>`;
 
     return (
@@ -69,7 +69,11 @@ export default function CreateWebsiteForm() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-gray-600 mb-2">
-                Copy this tracking script and add it to the <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">&lt;head&gt;</code> section of your website:
+                Copy this tracking script and add it to the{" "}
+                <code className="bg-gray-100 px-1 py-0.5 rounded text-xs">
+                  &lt;head&gt;
+                </code>{" "}
+                section of your website:
               </p>
             </div>
             <div className="relative">
@@ -100,7 +104,10 @@ export default function CreateWebsiteForm() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleGoToWebsites} className="w-full cursor-pointer">
+            <Button
+              onClick={handleGoToWebsites}
+              className="w-full cursor-pointer"
+            >
               Continue
             </Button>
           </CardFooter>
@@ -144,7 +151,11 @@ export default function CreateWebsiteForm() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={isPending} className="w-full cursor-pointer">
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full cursor-pointer"
+          >
             Add website
           </Button>
         </CardFooter>

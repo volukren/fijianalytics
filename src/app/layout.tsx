@@ -26,7 +26,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script async src="http://localhost:3000/script.js" data-domain="x.com" />
+        <script
+          async
+          src="http://localhost:3000/script.js"
+          data-domain="x.com"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}

@@ -1,6 +1,11 @@
 "use client";
 
-import { BarChart3Icon, GlobeIcon, Loader2Icon, SettingsIcon } from "lucide-react";
+import {
+  BarChart3Icon,
+  GlobeIcon,
+  Loader2Icon,
+  SettingsIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";

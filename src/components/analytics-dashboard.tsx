@@ -105,7 +105,9 @@ export function AnalyticsDashboard({ domain }: AnalyticsDashboardProps) {
           {analytics.referrers.length > 0 ? (
             analytics.referrers.map((referrer) => (
               <div key={referrer.referrer} className="flex justify-between">
-                <div className="text-sm truncate max-w-md">{referrer.referrer || "Direct"}</div>
+                <div className="text-sm truncate max-w-md">
+                  {referrer.referrer || "Direct"}
+                </div>
                 <div className="text-sm font-medium">{referrer.count}</div>
               </div>
             ))
@@ -117,9 +119,11 @@ export function AnalyticsDashboard({ domain }: AnalyticsDashboardProps) {
 
       <div className="border rounded-lg p-4 bg-gray-50">
         <h2 className="text-lg font-semibold mb-3">Installation</h2>
-        <p className="text-sm text-gray-600 mb-2">Add this script to your website:</p>
+        <p className="text-sm text-gray-600 mb-2">
+          Add this script to your website:
+        </p>
         <code className="block p-2 bg-white rounded text-xs">
-          {`<script data-domain="${domain}" src="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/script.js"></script>`}
+          {`<script data-domain="${domain}" src="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/script.js"></script>`}
         </code>
       </div>
     </div>

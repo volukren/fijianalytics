@@ -17,7 +17,9 @@ import { send } from "./networking.js";
   const url = new URL(scriptSrc);
   const apiHost = `${url.protocol}//${url.host}`;
 
-  const domain = (currentScript as HTMLScriptElement).getAttribute("data-domain");
+  const domain = (currentScript as HTMLScriptElement).getAttribute(
+    "data-domain",
+  );
 
   if (!domain) {
     console.error("Missing data-domain attribute on script tag");
@@ -39,7 +41,8 @@ import { send } from "./networking.js";
       href: window.location.pathname,
       userAgent,
       screen: `${window.screen.width}x${window.screen.height}`,
-      language: window.navigator.language || window.navigator.languages?.[0] || "",
+      language:
+        window.navigator.language || window.navigator.languages?.[0] || "",
     };
     debouncedSend(trackingData);
   };

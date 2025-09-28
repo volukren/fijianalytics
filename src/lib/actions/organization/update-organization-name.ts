@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth/server";
 
 const schema = z.object({
   name: z.string().min(1).max(100),
-  organizationId: z.string()
+  organizationId: z.string(),
 });
 
 export const updateOrganizationNameAction = authUserActionClient
