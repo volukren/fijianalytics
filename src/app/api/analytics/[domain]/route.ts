@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
+import { clickhouse } from "@/lib/clickhouse";
 
 export async function GET(
   request: Request,
@@ -39,62 +40,98 @@ export async function GET(
       }
     }
 
-    // Call Tinybird API endpoint - filtering by site_id (which is the domain)
-    const tinybirdResponse = await fetch(
-      `https://api.tinybird.co/v0/pipes/get_events.json?site_id=${encodeURIComponent(domain)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.TINYBIRD_READ_TOKEN}`,
-        },
+    const events = await clickhouse.query(domain);
+
+    const uniqueSessions = new Set(events.map((e) => e.session_id)).size;
+    const pageViews = events.length;
+
+    const pageViewCounts = events.reduce(
+      (acc, event) => {
+        acc[event.pathname] = (acc[event.pathname] || 0) + 1;
+        return acc;
       },
+      {} as Record<string, number>,
     );
 
-    if (!tinybirdResponse.ok) {
-      throw new Error(`Tinybird API error: ${tinybirdResponse.status}`);
-    }
+    const topPages = Object.entries(pageViewCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([pathname, views]) => ({ href: pathname, views }));
 
-    const tinybirdData = await tinybirdResponse.json();
+    const referrerCounts = events.reduce(
+      (acc, event) => {
+        if (event.referrer) {
+          acc[event.referrer] = (acc[event.referrer] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-    // Process raw events into analytics format expected by the frontend
-    const events = tinybirdData.data || [];
+    const referrers = Object.entries(referrerCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([referrer, count]) => ({ referrer, count }));
 
-    // Calculate metrics
-    const pageViews = events.length;
-    const uniqueSessions = new Set(events.map((e: any) => e.session_id)).size;
+    const browserCounts = events.reduce(
+      (acc, event) => {
+        if (event.browser) {
+          acc[event.browser] = (acc[event.browser] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-    // Calculate top pages
-    const pageCount = new Map<string, number>();
-    events.forEach((event: any) => {
-      if (event.pathname) {
-        pageCount.set(event.pathname, (pageCount.get(event.pathname) || 0) + 1);
-      }
-    });
+    const browsers = Object.entries(browserCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([browser, count]) => ({ browser, count }));
 
-    const topPages = Array.from(pageCount.entries())
-      .map(([href, views]) => ({ href, views }))
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 10);
+    console.log("Browser counts:", browserCounts);
+    console.log("Browsers array:", browsers);
 
-    // Calculate top referrers
-    const referrerCount = new Map<string, number>();
-    events.forEach((event: any) => {
-      const referrer = event.referrer || "";
-      referrerCount.set(referrer, (referrerCount.get(referrer) || 0) + 1);
-    });
+    const osCounts = events.reduce(
+      (acc, event) => {
+        if (event.os) {
+          acc[event.os] = (acc[event.os] || 0) + 1;
+        }
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-    const referrers = Array.from(referrerCount.entries())
-      .map(([referrer, count]) => ({ referrer, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
+    const operatingSystems = Object.entries(osCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+      .map(([os, count]) => ({ os, count }));
 
-    const analytics = {
+    // Group events by hour
+    const hourlyVisitors = events.reduce(
+      (acc, event) => {
+        const date = new Date(event.timestamp);
+        const hour = date.getHours();
+        acc[hour] = (acc[hour] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
+
+    // Create array with all 24 hours
+    const visitorsByHour = Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      visitors: hourlyVisitors[hour] || 0,
+    }));
+
+    return NextResponse.json({
       pageViews,
       uniqueSessions,
       topPages,
       referrers,
-    };
-
-    return NextResponse.json(analytics);
+      browsers,
+      operatingSystems,
+      visitorsByHour,
+    });
   } catch (error) {
     console.error("Error fetching analytics:", error);
     return NextResponse.json(

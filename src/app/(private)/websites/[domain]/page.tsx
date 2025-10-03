@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
-import { AnalyticsDashboard } from "@/components/analytics-dashboard";
+import { AnalyticsDashboard } from "@/components/website/analytics-dashboard";
 
 interface WebsitePageProps {
   params: Promise<{ domain: string }>;
@@ -35,7 +35,7 @@ export default async function WebsitePage({ params }: WebsitePageProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold">{website.domain}</h1>
       <AnalyticsDashboard domain={domain} />
     </div>

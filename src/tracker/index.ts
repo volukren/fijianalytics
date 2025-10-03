@@ -5,7 +5,6 @@ import { send } from "./networking.js";
 ((window) => {
   const {
     document: { currentScript, referrer },
-    navigator: { userAgent },
   } = window;
 
   if (!currentScript) {
@@ -39,7 +38,6 @@ import { send } from "./networking.js";
       domain,
       referrer,
       href: window.location.pathname,
-      userAgent,
       screen: `${window.screen.width}x${window.screen.height}`,
       language:
         window.navigator.language || window.navigator.languages?.[0] || "",

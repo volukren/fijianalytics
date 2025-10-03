@@ -23,6 +23,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `docker-compose logs clickhouse` - View ClickHouse logs
 - `docker-compose exec clickhouse clickhouse-client` - Access ClickHouse CLI
 
+### ClickHouse Migrations
+- Migration scripts located in `clickhouse-migrations/` directory
+- Run automatically via Docker Compose on container startup
+- Manual execution: `docker-compose run clickhouse-migrations`
+- Migration creates:
+  - `events` table with MergeTree engine
+  - Monthly partitioning on `timestamp` column
+  - Bloom filter indexes on `session_id` and `site_id`
+  - Primary key ordering by `(timestamp, event_id)`
+
 ## Architecture
 
 This is a privacy-focused web analytics platform built with Next.js 15, using a dual-database architecture for optimal performance.
@@ -31,10 +41,15 @@ This is a privacy-focused web analytics platform built with Next.js 15, using a 
 - **PostgreSQL** - Primary application data (users, organizations, websites)
   - Accessed via Prisma ORM with custom output path (`src/generated/client`)
   - Runs on port 5433 in Docker development
-- **ClickHouse** - High-performance analytics data storage
-  - Events table for tracking page views and user sessions
+  - Migrations via Prisma CLI (`npx prisma migrate dev`)
+
+- **ClickHouse** - High-performance analytics data storage and querying
+  - Events table partitioned by month for optimal performance
   - Accessed via `@clickhouse/client` library
-  - Custom migration system in `/clickhouse/` directory
+  - MergeTree engine with timestamp-based ordering
+  - Bloom filter indexes on `session_id` and `site_id` for fast lookups
+  - Custom migration system in `clickhouse-migrations/` directory
+  - Runs on port 8123 (HTTP) and 9000 (native protocol)
 
 ### App Router Structure
 Uses Next.js App Router with route groups for organization:
@@ -86,10 +101,15 @@ Uses Next.js App Router with route groups for organization:
 - Collects: referrer, URL, user agent, session data
 
 #### ClickHouse Integration (`src/lib/clickhouse.ts`)
-- Event storage with `session_id` and `timestamp`
-- Connection pooling and error handling
-- Async insert for performance
-- Time zone aware queries
+- **Buffered Insert Pattern** - Events are buffered in-memory before batch insertion
+  - Buffer size: 5000 events (configurable)
+  - Auto-flush interval: 10 seconds (configurable)
+  - Immediate flush when buffer size reached
+  - Error recovery: failed batches are prepended back to buffer
+- **Connection Management** - Singleton service with persistent client connection
+- **Event Schema** - Stores `event_id`, `timestamp`, `session_id`, `pathname`, `screen_width`, `screen_height`, `event_type`, `referrer`, `language`, `site_id`
+- **JSONEachRow Format** - Efficient row-by-row JSON format for inserts and queries
+- **Query Interface** - Parameterized queries with automatic type safety
 
 ### UI Components
 - Uses shadcn/ui components with Radix UI primitives

@@ -22,7 +22,10 @@ async function createEventsTable() {
         event_type String,
         referrer String,
         language String,
-        site_id String
+        site_id String,
+        browser String,
+        browser_version String,
+        os String
       )
       ENGINE = MergeTree()
       PARTITION BY toYYYYMM(timestamp)
@@ -31,6 +34,44 @@ async function createEventsTable() {
   });
 
   console.log('Events table created successfully');
+}
+
+async function addMissingColumns() {
+  console.log('Adding missing columns...');
+
+  try {
+    await client.command({
+      query: `
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS browser String DEFAULT ''
+      `,
+    });
+
+    await client.command({
+      query: `
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS browser_version String DEFAULT ''
+      `,
+    });
+
+    await client.command({
+      query: `
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS os String DEFAULT ''
+      `,
+    });
+
+    await client.command({
+      query: `
+        ALTER TABLE events
+        ADD COLUMN IF NOT EXISTS visitor_id String DEFAULT ''
+      `,
+    });
+
+    console.log('Missing columns added successfully');
+  } catch (error) {
+    console.error('Error adding columns:', error);
+  }
 }
 
 async function createIndexes() {
@@ -62,6 +103,7 @@ async function runMigrations() {
     console.log(`Host: ${process.env.CLICKHOUSE_HOST || 'http://localhost:8123'}`);
 
     await createEventsTable();
+    await addMissingColumns();
     await createIndexes();
 
     console.log('All migrations completed successfully');

@@ -1,11 +1,13 @@
 "use client";
 
 import type { Organization } from "better-auth/plugins/organization";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, PlusIcon } from "lucide-react";
+import Link from "next/link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -39,7 +41,7 @@ export default function OrganizationSwitcher({
       <SidebarMenu className="w-full">
         <SidebarMenuItem>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" className="border border-neutral-200">
+            <SidebarMenuButton size="lg" className="border border-neutral-200 cursor-pointer">
               <Avatar className="size-8 rounded">
                 <AvatarFallback className="rounded bg-neutral-200">
                   {activeOrganization?.name?.charAt(0).toUpperCase()}
@@ -76,6 +78,13 @@ export default function OrganizationSwitcher({
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard/new-organization" className="cursor-pointer">
+            <PlusIcon className="size-4 mr-2" />
+            Create organization
+          </Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -84,6 +84,8 @@ model Website {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  activeSessions ActiveSession[]
+
   @@index([organizationId])
   @@map("websites")
 }
@@ -127,4 +129,16 @@ model Invitation {
   user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@map("invitations")
+}
+
+model ActiveSession {
+  sessionId String   @id @default(cuid())
+  visitorId String   @map("visitor_id")
+  domain    String
+  website   Website  @relation(fields: [domain], references: [domain], onDelete: Cascade)
+  startedAt DateTime @map("started_at")
+  endedAt   DateTime @map("ended_at")
+
+  @@unique([visitorId, domain])
+  @@map("active_sessions")
 }

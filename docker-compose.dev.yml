@@ -1,0 +1,19 @@
+services:
+  postgres:
+    extends:
+      file: docker-compose.yml
+      service: postgres
+
+  clickhouse:
+    extends:
+      file: docker-compose.yml
+      service: clickhouse
+
+  clickhouse-migrations:
+    extends:
+      file: docker-compose.yml
+      service: clickhouse-migrations
+
+volumes:
+  postgres_data:
+  clickhouse_data:
