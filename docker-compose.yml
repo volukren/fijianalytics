@@ -10,6 +10,13 @@ services:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_preload_libraries=pg_cron"
+      - "-c"
+      - "cron.database_name=${POSTGRES_DB:-fiji}"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 5s
