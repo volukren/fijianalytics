@@ -139,6 +139,6 @@ model ActiveSession {
   startedAt DateTime @map("started_at")
   endedAt   DateTime @map("ended_at")
 
-  @@unique([visitorId, domain])
+  @@index([visitorId, domain])
   @@map("active_sessions")
 }

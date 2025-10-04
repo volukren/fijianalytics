@@ -38,10 +38,14 @@ COPY --from=builder /app/src/generated ./src/generated
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
-USER nextjs
-
 EXPOSE 3000
 
 ENV PORT=3000
 
-CMD ["node", "server.js"]
+# Copy entrypoint script
+COPY --from=builder /app/docker/app-entrypoint.sh ./
+RUN chmod +x app-entrypoint.sh
+
+USER nextjs
+
+CMD ["sh", "./app-entrypoint.sh"]

@@ -6,6 +6,7 @@ import { UAParser } from "ua-parser-js";
 import { clickhouse } from "@/lib/clickhouse";
 import upsertSession from "@/lib/session";
 import generateVisitorId from "@/lib/visitor-id";
+import { prisma } from "@/lib/prisma";
 
 function getClientIP(request: NextRequest): string {
   // Get IP address from various headers (in order of preference)
@@ -40,6 +41,17 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Event not tracked: request from bot detected",
       });
+    }
+
+    const website = await prisma.website.findFirst({
+      where: { domain: body.domain }
+    })
+
+    if (!website) {
+      return NextResponse.json({
+        success: false,
+        message: "Forbidden"
+      }, { status: 400 })
     }
 
     const parser = new UAParser(userAgent);

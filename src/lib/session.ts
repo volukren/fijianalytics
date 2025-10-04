@@ -5,17 +5,27 @@ import {prisma} from "@/lib/prisma";
 export default async function upsertSession(visitorId: string, domain: string) {
   const now = new Date();
 
-  const session = await prisma.activeSession.upsert({
+  const existingActiveSession = await prisma.activeSession.findFirst({
     where: {
-      visitorId_domain: {
-        visitorId,
-        domain
+      visitorId: visitorId,
+      domain: domain
+    }
+  });
+
+  if (existingActiveSession) {
+    await prisma.activeSession.update({
+      data: {
+        endedAt: now,
+      },
+      where: {
+        sessionId: existingActiveSession.sessionId
       }
-    },
-    update: {
-      endedAt: now
-    },
-    create: {
+    })
+    return existingActiveSession.sessionId;
+  }
+
+  const session = await prisma.activeSession.create({
+    data: {
       visitorId,
       domain,
       startedAt: now,
